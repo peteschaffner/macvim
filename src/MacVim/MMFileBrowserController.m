@@ -325,6 +325,7 @@ static NSString *LEFT_KEY_CHAR, *RIGHT_KEY_CHAR, *DOWN_KEY_CHAR, *UP_KEY_CHAR;
   if ((self = [super initWithFrame:frame])) {
     self.refusesFirstResponder = YES;
   }
+  [self setSelectionHighlightStyle:NSTableViewSelectionHighlightStyleSourceList];
   return self;
 }
 
@@ -532,17 +533,8 @@ static NSString *LEFT_KEY_CHAR, *RIGHT_KEY_CHAR, *DOWN_KEY_CHAR, *UP_KEY_CHAR;
   [fileBrowser setDraggingSourceOperationMask:NSDragOperationCopy|NSDragOperationLink forLocal:NO];
   [fileBrowser registerForDraggedTypes:[NSArray arrayWithObjects:DRAG_MOVE_FILES, NSFilenamesPboardType, nil]];
 
-  pathControl = [[NSPathControl alloc] initWithFrame:NSMakeRect(0, 0, 0, 20)];
-  [pathControl setRefusesFirstResponder:YES];
-  [pathControl setAutoresizingMask:NSViewWidthSizable];
-  [pathControl setBackgroundColor:[NSColor whiteColor]];
-  [pathControl setPathStyle:NSPathStylePopUp];
-  [pathControl setFont:[NSFont fontWithName:[[pathControl font] fontName] size:12]];
-  [pathControl setTarget:self];
-  [pathControl setAction:@selector(changeWorkingDirectoryFromPathControl:)];
-
-  NSScrollView *scrollView = [[[NSScrollView alloc] initWithFrame:NSMakeRect(0, pathControl.frame.size.height, 0, 0)] autorelease];
-  [scrollView setHasHorizontalScroller:YES];
+  NSScrollView *scrollView = [[[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)] autorelease];
+  [scrollView setHasHorizontalScroller:NO];
   [scrollView setHasVerticalScroller:YES];
   [scrollView setAutohidesScrollers:YES];
   [scrollView setDocumentView:fileBrowser];
@@ -553,7 +545,6 @@ static NSString *LEFT_KEY_CHAR, *RIGHT_KEY_CHAR, *DOWN_KEY_CHAR, *UP_KEY_CHAR;
                                                 initWithFrame:NSZeroRect] autorelease];
   [containerView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
   [containerView addSubview:scrollView];
-  [containerView addSubview:pathControl];
 
   [self setView:containerView];
   viewLoaded = YES;
@@ -578,7 +569,6 @@ static NSString *LEFT_KEY_CHAR, *RIGHT_KEY_CHAR, *DOWN_KEY_CHAR, *UP_KEY_CHAR;
 
 - (void)dealloc
 {
-  [pathControl release]; pathControl = nil;
   [fileBrowser release]; fileBrowser = nil;
   [rootItem release]; rootItem = nil;
 
@@ -606,7 +596,6 @@ static NSString *LEFT_KEY_CHAR, *RIGHT_KEY_CHAR, *DOWN_KEY_CHAR, *UP_KEY_CHAR;
                                               vim:[windowController vimController]];
   [fileBrowser reloadData];
   [fileBrowser expandItem:rootItem];
-  [pathControl setURL:[NSURL fileURLWithPath:root]];
 
   [self watchRoot];
 }
