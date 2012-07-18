@@ -1200,6 +1200,67 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 		</dict>
+    <dict>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>coffee</string>
+      </array>
+      <key>CFBundleTypeIconFile</key>
+      <string>MacVim-coffee</string>
+      <key>CFBundleTypeName</key>
+      <string>CoffeeScript Source File</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+    </dict>
+    <dict>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>json</string>
+      </array>
+      <key>CFBundleTypeIconFile</key>
+      <string>MacVim-json</string>
+      <key>CFBundleTypeName</key>
+      <string>JSON Source File</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+    </dict>
+    <dict>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>sass</string>
+        <string>scss</string>
+      </array>
+      <key>CFBundleTypeIconFile</key>
+      <string>MacVim-sass</string>
+      <key>CFBundleTypeName</key>
+      <string>Sass Source File</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+    </dict>
+    <dict>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>erb</string>
+      </array>
+      <key>CFBundleTypeIconFile</key>
+      <string>MacVim-erb</string>
+      <key>CFBundleTypeName</key>
+      <string>ERB Source File</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+    </dict>
+    <dict>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>haml</string>
+      </array>
+      <key>CFBundleTypeIconFile</key>
+      <string>MacVim-haml</string>
+      <key>CFBundleTypeName</key>
+      <string>Haml Source File</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+    </dict>
 
 	</array>
 	<key>CFBundleExecutable</key>
