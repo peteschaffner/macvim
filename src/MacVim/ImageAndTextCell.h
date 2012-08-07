@@ -55,6 +55,7 @@
 
 @property(nonatomic, retain) NSImage *image;
 
+- (void)setVerticalCentering:(BOOL)centerVertical;
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView;
 - (NSSize)cellSize;
 

@@ -523,6 +523,7 @@ static NSString *LEFT_KEY_CHAR, *RIGHT_KEY_CHAR, *DOWN_KEY_CHAR, *UP_KEY_CHAR;
   NSTableColumn *column = [[[NSTableColumn alloc] initWithIdentifier:nil] autorelease];
   ImageAndTextCell *cell = [[[ImageAndTextCell alloc] init] autorelease];
   [cell setEditable:YES];
+  [cell setVerticalCentering:YES];
   [column setDataCell:cell];
   [fileBrowser addTableColumn:column];
   [fileBrowser setOutlineTableColumn:column];

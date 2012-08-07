@@ -56,6 +56,8 @@
         [self setLineBreakMode:NSLineBreakByTruncatingTail];
         [self setSelectable:YES];
     }
+    // we want a smaller font
+    [self setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
     return self;
 }
 
@@ -163,6 +165,15 @@
     }
     // At this point, the cellFrame has been modified to exclude the portion for the image. Let the superclass handle the hit testing at this point.
     return [super hitTestForEvent:event inRect:cellFrame ofView:controlView];    
+}
+
+// for vertically centering our text
+// TODO: find another way to accomplish this
+// because this relies on an internal flag and could disappear in the future
+- (void)setVerticalCentering:(BOOL)centerVertical
+{
+    @try { _cFlags.vCentered = centerVertical ? 1 : 0; }
+    @catch(...) { NSLog(@"*** unable to set vertical centering"); }
 }
 
 
