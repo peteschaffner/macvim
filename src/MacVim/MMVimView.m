@@ -82,7 +82,7 @@ enum {
 - (MMVimView *)initWithFrame:(NSRect)frame
                vimController:(MMVimController *)controller
 {
-    if (![super initWithFrame:frame])
+    if (!(self = [super initWithFrame:frame]))
         return nil;
     
     vimController = controller;
@@ -94,7 +94,7 @@ enum {
 
     NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
     NSInteger renderer = [ud integerForKey:MMRendererKey];
-    ASLogInfo(@"Use renderer=%d", renderer);
+    ASLogInfo(@"Use renderer=%ld", renderer);
 
 #if MM_ENABLE_ATSUI
     if (MMRendererATSUI == renderer) {
@@ -106,7 +106,7 @@ enum {
     if (MMRendererCoreText == renderer) {
         // HACK! 'textView' has type MMTextView, but MMCoreTextView is not
         // derived from MMTextView.
-        textView = [[MMCoreTextView alloc] initWithFrame:frame];
+        textView = (MMTextView *)[[MMCoreTextView alloc] initWithFrame:frame];
     }
 #endif
     else {
