@@ -532,6 +532,15 @@ static NSString *LEFT_KEY_CHAR, *RIGHT_KEY_CHAR, *DOWN_KEY_CHAR, *UP_KEY_CHAR;
   [fileBrowser setDraggingSourceOperationMask:NSDragOperationCopy|NSDragOperationLink forLocal:NO];
   [fileBrowser registerForDraggedTypes:[NSArray arrayWithObjects:DRAG_MOVE_FILES, NSFilenamesPboardType, nil]];
 
+  /* pathControl = [[NSPathControl alloc] initWithFrame:NSMakeRect(0, 0, 0, 30)]; */
+  /* [pathControl setRefusesFirstResponder:YES]; */
+  /* [pathControl setAutoresizingMask:NSViewWidthSizable]; */
+  /* [pathControl setBackgroundColor:[NSColor clearColor]]; */
+  /* [pathControl setPathStyle:NSPathStylePopUp]; */
+  /* [pathControl setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]]; */
+  /* [pathControl setTarget:self]; */
+  /* [pathControl setAction:@selector(changeWorkingDirectoryFromPathControl:)]; */
+
   NSScrollView *scrollView = [[[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)] autorelease];
   [scrollView setHasHorizontalScroller:NO];
   [scrollView setHasVerticalScroller:YES];
@@ -544,6 +553,7 @@ static NSString *LEFT_KEY_CHAR, *RIGHT_KEY_CHAR, *DOWN_KEY_CHAR, *UP_KEY_CHAR;
                                                 initWithFrame:NSZeroRect] autorelease];
   [containerView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
   [containerView addSubview:scrollView];
+  /* [containerView addSubview:pathControl]; */
 
   [self setView:containerView];
   viewLoaded = YES;
@@ -568,6 +578,7 @@ static NSString *LEFT_KEY_CHAR, *RIGHT_KEY_CHAR, *DOWN_KEY_CHAR, *UP_KEY_CHAR;
 
 - (void)dealloc
 {
+  /* [pathControl release]; pathControl = nil; */
   [fileBrowser release]; fileBrowser = nil;
   [rootItem release]; rootItem = nil;
 
@@ -595,6 +606,7 @@ static NSString *LEFT_KEY_CHAR, *RIGHT_KEY_CHAR, *DOWN_KEY_CHAR, *UP_KEY_CHAR;
                                               vim:[windowController vimController]];
   [fileBrowser reloadData];
   [fileBrowser expandItem:rootItem];
+  /* [pathControl setURL:[NSURL fileURLWithPath:root]]; */
 
   [self watchRoot];
 }
@@ -1073,10 +1085,10 @@ static NSString *LEFT_KEY_CHAR, *RIGHT_KEY_CHAR, *DOWN_KEY_CHAR, *UP_KEY_CHAR;
   [self changeWorkingDirectory:[[[sender representedObject] dirItem] fullPath]];
 }
 
-- (void)changeWorkingDirectoryFromPathControl:(NSPathControl *)sender {
-  NSPathComponentCell *clickedCell = [sender clickedPathComponentCell];
-  [self changeWorkingDirectory:[[clickedCell URL] path]];
-}
+/* - (void)changeWorkingDirectoryFromPathControl:(NSPathControl *)sender { */
+/*   NSPathComponentCell *clickedCell = [sender clickedPathComponentCell]; */
+/*   [self changeWorkingDirectory:[[clickedCell URL] path]]; */
+/* } */
 
 - (void)deleteSelectedFiles:(NSMenuItem *)sender {
   NSArray *items = [self selectedItems];

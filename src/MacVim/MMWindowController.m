@@ -139,9 +139,9 @@
     // Use textured background on Leopard or later (skip the 'if' on Tiger for
     // polished metal window).
     NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
-    if ([ud boolForKey:MMTexturedWindowKey]
-            || (floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_4))
-        styleMask |= NSTexturedBackgroundWindowMask;
+    /* if ([ud boolForKey:MMTexturedWindowKey] */
+    /*         || (floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_4)) */
+    /*     styleMask |= NSTexturedBackgroundWindowMask; */
 
     // NOTE: The content rect is only used the very first time MacVim is
     // started (or rather, when ~/Library/Preferences/org.vim.MacVim.plist does

@@ -47,16 +47,16 @@
 
     [self setReleasedWhenClosed:NO];
 
-    NSRect tabSepRect = { {0, rect.size.height - 1}, {rect.size.width, 1} };
-    tablineSeparator = [[NSBox alloc] initWithFrame:tabSepRect];
+    /* NSRect tabSepRect = { {0, rect.size.height - 1}, {rect.size.width, 1} }; */
+    /* tablineSeparator = [[NSBox alloc] initWithFrame:tabSepRect]; */
     
-    [tablineSeparator setBoxType:NSBoxSeparator];
-    [tablineSeparator setHidden:YES];
-    [tablineSeparator setAutoresizingMask:NSViewWidthSizable|NSViewMinYMargin];
+    /* [tablineSeparator setBoxType:NSBoxSeparator]; */
+    /* [tablineSeparator setHidden:YES]; */
+    /* [tablineSeparator setAutoresizingMask:NSViewWidthSizable|NSViewMinYMargin]; */
 
     NSView *contentView = [self contentView];
-    [contentView setAutoresizesSubviews:YES];
-    [contentView addSubview:tablineSeparator];
+    /* [contentView setAutoresizesSubviews:YES]; */
+    /* [contentView addSubview:tablineSeparator]; */
 
 #if 0   // Enabling this breaks NSSplitView's mouse cursor handling
     // NOTE: Vim needs to process mouse moved events, so enable them here.
