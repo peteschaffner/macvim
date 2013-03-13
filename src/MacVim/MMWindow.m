@@ -54,7 +54,7 @@
     /* [tablineSeparator setHidden:YES]; */
     /* [tablineSeparator setAutoresizingMask:NSViewWidthSizable|NSViewMinYMargin]; */
 
-    NSView *contentView = [self contentView];
+    /* NSView *contentView = [self contentView]; */
     /* [contentView setAutoresizesSubviews:YES]; */
     /* [contentView addSubview:tablineSeparator]; */
 
