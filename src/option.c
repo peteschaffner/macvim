@@ -6225,16 +6225,46 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* 'matchpairs' */
     else if (gvarp == &p_mps)
     {
-	/* Check for "x:y,x:y" */
-	for (p = *varp; *p != NUL; p += 4)
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
 	{
-	    if (p[1] != ':' || p[2] == NUL || (p[3] != NUL && p[3] != ','))
+	    for (p = *varp; *p != NUL; ++p)
 	    {
-		errmsg = e_invarg;
-		break;
+		int x2 = -1;
+		int x3 = -1;
+
+		if (*p != NUL)
+		    p += mb_ptr2len(p);
+		if (*p != NUL)
+		    x2 = *p++;
+		if (*p != NUL)
+		{
+		    x3 = mb_ptr2char(p);
+		    p += mb_ptr2len(p);
+		}
+		if (x2 != ':' || x3 == -1 || (*p != NUL && *p != ','))
+		{
+		    errmsg = e_invarg;
+		    break;
+		}
+		if (*p == NUL)
+		    break;
 	    }
-	    if (p[3] == NUL)
-		break;
+	}
+	else
+#endif
+	{
+	    /* Check for "x:y,x:y" */
+	    for (p = *varp; *p != NUL; p += 4)
+	    {
+		if (p[1] != ':' || p[2] == NUL || (p[3] != NUL && p[3] != ','))
+		{
+		    errmsg = e_invarg;
+		    break;
+		}
+		if (p[3] == NUL)
+		    break;
+	    }
 	}
     }
 
@@ -7660,24 +7690,30 @@ set_bool_option(opt_idx, varp, value, opt_flags)
     /* 'undofile' */
     else if ((int *)varp == &curbuf->b_p_udf || (int *)varp == &p_udf)
     {
-	char_u	hash[UNDO_HASH_SIZE];
-	buf_T	*save_curbuf = curbuf;
-
-	for (curbuf = firstbuf; curbuf != NULL; curbuf = curbuf->b_next)
+	/* Only take action when the option was set. When reset we do not
+	 * delete the undo file, the option may be set again without making
+	 * any changes in between. */
+	if (curbuf->b_p_udf || p_udf)
 	{
-	    /* When 'undofile' is set globally: for every buffer, otherwise
-	     * only for the current buffer: Try to read in the undofile, if
-	     * one exists and the buffer wasn't changed and the buffer was
-	     * loaded. */
-	    if ((curbuf == save_curbuf
-				|| (opt_flags & OPT_GLOBAL) || opt_flags == 0)
-		    && !curbufIsChanged() && curbuf->b_ml.ml_mfp != NULL)
+	    char_u	hash[UNDO_HASH_SIZE];
+	    buf_T	*save_curbuf = curbuf;
+
+	    for (curbuf = firstbuf; curbuf != NULL; curbuf = curbuf->b_next)
 	    {
-		u_compute_hash(hash);
-		u_read_undo(NULL, hash, curbuf->b_fname);
+		/* When 'undofile' is set globally: for every buffer, otherwise
+		 * only for the current buffer: Try to read in the undofile,
+		 * if one exists, the buffer wasn't changed and the buffer was
+		 * loaded */
+		if ((curbuf == save_curbuf
+				|| (opt_flags & OPT_GLOBAL) || opt_flags == 0)
+			&& !curbufIsChanged() && curbuf->b_ml.ml_mfp != NULL)
+		{
+		    u_compute_hash(hash);
+		    u_read_undo(NULL, hash, curbuf->b_fname);
+		}
 	    }
+	    curbuf = save_curbuf;
 	}
-	curbuf = save_curbuf;
     }
 #endif
 
@@ -8647,11 +8683,6 @@ set_num_option(opt_idx, varp, value, errbuf, errbuflen, opt_flags)
 	    p_window = Rows - 1;
     }
 
-    if (curbuf->b_p_sts < 0)
-    {
-	errmsg = e_positive;
-	curbuf->b_p_sts = 0;
-    }
     if (curbuf->b_p_ts <= 0)
     {
 	errmsg = e_positive;
@@ -11322,6 +11353,19 @@ option_was_set(name)
 }
 
 /*
+ * Reset the flag indicating option "name" was set.
+ */
+    void
+reset_option_was_set(name)
+    char_u	*name;
+{
+    int idx = findoption(name);
+
+    if (idx >= 0)
+	options[idx].flags &= ~P_WAS_SET;
+}
+
+/*
  * compatible_set() - Called when 'compatible' has been set or unset.
  *
  * When 'compatible' set: Set all relevant options (those that have the P_VIM)
@@ -11572,6 +11616,114 @@ check_ff_value(p)
 get_sw_value()
 {
     return curbuf->b_p_sw ? curbuf->b_p_sw : curbuf->b_p_ts;
+}
+
+/*
+ * Return the effective softtabstop value for the current buffer, using the
+ * 'tabstop' value when 'softtabstop' is negative.
+ */
+    long
+get_sts_value()
+{
+    return curbuf->b_p_sts < 0 ? get_sw_value() : curbuf->b_p_sts;
+}
+
+/*
+ * Check matchpairs option for "*initc".
+ * If there is a match set "*initc" to the matching character and "*findc" to
+ * the opposite character.  Set "*backwards" to the direction.
+ * When "switchit" is TRUE swap the direction.
+ */
+    void
+find_mps_values(initc, findc, backwards, switchit)
+    int	    *initc;
+    int	    *findc;
+    int	    *backwards;
+    int	    switchit;
+{
+    char_u	*ptr;
+
+    ptr = curbuf->b_p_mps;
+    while (*ptr != NUL)
+    {
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    char_u *prev;
+
+	    if (mb_ptr2char(ptr) == *initc)
+	    {
+		if (switchit)
+		{
+		    *findc = *initc;
+		    *initc = mb_ptr2char(ptr + mb_ptr2len(ptr) + 1);
+		    *backwards = TRUE;
+		}
+		else
+		{
+		    *findc = mb_ptr2char(ptr + mb_ptr2len(ptr) + 1);
+		    *backwards = FALSE;
+		}
+		return;
+	    }
+	    prev = ptr;
+	    ptr += mb_ptr2len(ptr) + 1;
+	    if (mb_ptr2char(ptr) == *initc)
+	    {
+		if (switchit)
+		{
+		    *findc = *initc;
+		    *initc = mb_ptr2char(prev);
+		    *backwards = FALSE;
+		}
+		else
+		{
+		    *findc = mb_ptr2char(prev);
+		    *backwards = TRUE;
+		}
+		return;
+	    }
+	    ptr += mb_ptr2len(ptr);
+	}
+	else
+#endif
+	{
+	    if (*ptr == *initc)
+	    {
+		if (switchit)
+		{
+		    *backwards = TRUE;
+		    *findc = *initc;
+		    *initc = ptr[2];
+		}
+		else
+		{
+		    *backwards = FALSE;
+		    *findc = ptr[2];
+		}
+		return;
+	    }
+	    ptr += 2;
+	    if (*ptr == *initc)
+	    {
+		if (switchit)
+		{
+		    *backwards = FALSE;
+		    *findc = *initc;
+		    *initc = ptr[-2];
+		}
+		else
+		{
+		    *backwards = TRUE;
+		    *findc =  ptr[-2];
+		}
+		return;
+	    }
+	    ++ptr;
+	}
+	if (*ptr == ',')
+	    ++ptr;
+    }
 }
 
 #ifdef FEAT_FULLSCREEN

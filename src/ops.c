@@ -1623,6 +1623,7 @@ op_delete(oap)
 #endif
     linenr_T		old_lcount = curbuf->b_ml.ml_line_count;
     int			did_yank = FALSE;
+    int			orig_regname = oap->regname;
 
     if (curbuf->b_ml.ml_flags & ML_EMPTY)	    /* nothing to do */
 	return OK;
@@ -1715,8 +1716,10 @@ op_delete(oap)
 	/*
 	 * Put deleted text into register 1 and shift number registers if the
 	 * delete contains a line break, or when a regname has been specified.
+	 * Use the register name from before adjust_clip_reg() may have
+	 * changed it.
 	 */
-	if (oap->regname != 0 || oap->motion_type == MLINE
+	if (orig_regname != 0 || oap->motion_type == MLINE
 				   || oap->line_count > 1 || oap->use_reg_one)
 	{
 	    y_current = &y_regs[9];
@@ -3347,6 +3350,12 @@ do_put(regname, dir, count, flags)
 	if (insert_string == NULL)
 	    return;
     }
+
+#ifdef FEAT_AUTOCMD
+    /* Autocommands may be executed when saving lines for undo, which may make
+     * y_array invalid.  Start undo now to avoid that. */
+    u_save(curwin->w_cursor.lnum, curwin->w_cursor.lnum + 1);
+#endif
 
     if (insert_string != NULL)
     {

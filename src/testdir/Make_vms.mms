@@ -4,7 +4,7 @@
 # Authors:	Zoltan Arpadffy, <arpadffy@polarhome.com>
 #		Sandor Kopanyi,  <sandor.kopanyi@mailbox.hu>
 #
-# Last change:  2012 Apr 05
+# Last change:  2012 Dec 05
 #
 # This has been tested on VMS 6.2 to 8.3 on DEC Alpha, VAX and IA64.
 # Edit the lines in the Configuration section below to select.
@@ -76,7 +76,7 @@ SCRIPT = test1.out  test2.out  test3.out  test4.out  test5.out  \
 	 test66.out test67.out test68.out test69.out \
 	 test71.out test72.out test74.out test75.out test76.out \
 	 test77.out test78.out test79.out test80.out test81.out \
-	 test82.out test83.out test84.out
+	 test82.out test83.out test84.out test88.out
 
 # Known problems:
 # Test 30: a problem around mac format - unknown reason
@@ -184,5 +184,6 @@ clean :
 	-@ if "''F$SEARCH("small.vim")'"    .NES. "" then delete/noconfirm/nolog small.vim.*
 	-@ if "''F$SEARCH("mbyte.vim")'"    .NES. "" then delete/noconfirm/nolog mbyte.vim.*
 	-@ if "''F$SEARCH("mzscheme.vim")'" .NES. "" then delete/noconfirm/nolog mzscheme.vim.*
+	-@ if "''F$SEARCH("lua.vim")'" .NES. "" then delete/noconfirm/nolog lua.vim.*
 	-@ if "''F$SEARCH("viminfo.*")'"    .NES. "" then delete/noconfirm/nolog viminfo.*.*
 

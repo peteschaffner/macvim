@@ -1535,7 +1535,9 @@ do_cmdline(cmdline, fgetline, cookie, flags)
 	}
     }
 
-#ifndef FEAT_EVAL
+#ifdef FEAT_EVAL
+    did_endif = FALSE;  /* in case do_cmdline used recursively */
+#else
     /*
      * Reset if_level, in case a sourced script file contains more ":if" than
      * ":endif" (could be ":if x | foo | endif").
@@ -1734,11 +1736,13 @@ do_one_cmd(cmdlinep, sourcing,
     ++ex_nesting_level;
 #endif
 
-	/* when not editing the last file :q has to be typed twice */
+    /* When the last file has not been edited :q has to be typed twice. */
     if (quitmore
 #ifdef FEAT_EVAL
 	    /* avoid that a function call in 'statusline' does this */
 	    && !getline_equal(fgetline, cookie, get_func_line)
+	    /* avoid that an autocommand, e.g. QuitPre, does this */
+	    && !getline_equal(fgetline, cookie, getnextac)
 #endif
 	    )
 	--quitmore;
@@ -6483,7 +6487,7 @@ ex_colorscheme(eap)
 #endif
     }
     else if (load_colors(eap->arg) == FAIL)
-	EMSG2(_("E185: Cannot find color scheme %s"), eap->arg);
+	EMSG2(_("E185: Cannot find color scheme '%s'"), eap->arg);
 }
 
     static void
@@ -7620,7 +7624,7 @@ ex_tabs(eap)
 	    msg_putchar(bufIsChanged(wp->w_buffer) ? '+' : ' ');
 	    msg_putchar(' ');
 	    if (buf_spname(wp->w_buffer) != NULL)
-		STRCPY(IObuff, buf_spname(wp->w_buffer));
+		vim_strncpy(IObuff, buf_spname(wp->w_buffer), IOSIZE - 1);
 	    else
 		home_replace(wp->w_buffer, wp->w_buffer->b_fname,
 							IObuff, IOSIZE, TRUE);

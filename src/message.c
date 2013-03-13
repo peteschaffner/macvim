@@ -3825,7 +3825,7 @@ do_browse(flags, title, dflt, ext, initdir, filter, buf)
 	    filter = BROWSE_FILTER_DEFAULT;
 	if (flags & BROWSE_DIR)
 	{
-#  if defined(FEAT_GUI_GTK) || defined(WIN3264)
+#  if defined(FEAT_GUI_GTK) || defined(WIN3264) || defined(FEAT_GUI_MACVIM)
 	    /* For systems that have a directory dialog. */
 	    fname = gui_mch_browsedir(title, initdir);
 #  else
@@ -3833,9 +3833,9 @@ do_browse(flags, title, dflt, ext, initdir, filter, buf)
 	     * remove the file name. */
 	    fname = gui_mch_browse(0, title, dflt, ext, initdir, (char_u *)"");
 #  endif
-#  if !defined(FEAT_GUI_GTK)
+#  if !(defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MACVIM))
 	    /* Win32 adds a dummy file name, others return an arbitrary file
-	     * name.  GTK+ 2 returns only the directory, */
+	     * name.  GTK+ 2 and MacVim returns only the directory, */
 	    if (fname != NULL && *fname != NUL && !mch_isdir(fname))
 	    {
 		/* Remove the file name. */
@@ -4294,6 +4294,7 @@ vim_snprintf(str, str_m, fmt, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
 	    case '%':
 	    case 'c':
 	    case 's':
+	    case 'S':
 		length_modifier = '\0';
 		str_arg_l = 1;
 		switch (fmt_spec)
@@ -4322,6 +4323,7 @@ vim_snprintf(str, str_m, fmt, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
 		    }
 
 		case 's':
+		case 'S':
 		    str_arg =
 #ifndef HAVE_STDARG_H
 				(char *)get_a_arg(arg_idx);
@@ -4358,6 +4360,24 @@ vim_snprintf(str, str_m, fmt, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
 			str_arg_l = (q == NULL) ? precision
 						      : (size_t)(q - str_arg);
 		    }
+#ifdef FEAT_MBYTE
+		    if (fmt_spec == 'S')
+		    {
+			if (min_field_width != 0)
+			    min_field_width += STRLEN(str_arg)
+				     - mb_string2cells((char_u *)str_arg, -1);
+			if (precision)
+			{
+			    char_u *p1 = (char_u *)str_arg;
+			    size_t i;
+
+			    for (i = 0; i < precision && *p1; i++)
+				p1 += mb_ptr2len(p1);
+
+			    str_arg_l = precision = p1 - (char_u *)str_arg;
+			}
+		    }
+#endif
 		    break;
 
 		default:

@@ -581,7 +581,8 @@ searchit(win, buf, pos, dir, pat, count, options, pat_use, stop_lnum, tm)
 	extra_col = 0;
 #ifdef FEAT_MBYTE
     /* Watch out for the "col" being MAXCOL - 2, used in a closed fold. */
-    else if (has_mbyte && pos->lnum >= 1 && pos->lnum <= buf->b_ml.ml_line_count
+    else if (dir != BACKWARD && has_mbyte
+		    && pos->lnum >= 1 && pos->lnum <= buf->b_ml.ml_line_count
 						     && pos->col < MAXCOL - 2)
     {
 	ptr = ml_get_buf(buf, pos->lnum, FALSE) + pos->col;
@@ -1795,28 +1796,8 @@ findmatchlimit(oap, initc, flags, maxtravel)
     }
     else if (initc != '#' && initc != NUL)
     {
-	/* 'matchpairs' is "x:y,x:y" */
-	for (ptr = curbuf->b_p_mps; *ptr; ptr += 2)
-	{
-	    if (*ptr == initc)
-	    {
-		findc = initc;
-		initc = ptr[2];
-		backwards = TRUE;
-		break;
-	    }
-	    ptr += 2;
-	    if (*ptr == initc)
-	    {
-		findc = initc;
-		initc = ptr[-2];
-		backwards = FALSE;
-		break;
-	    }
-	    if (ptr[1] != ',')
-		break;
-	}
-	if (!findc)		/* invalid initc! */
+	find_mps_values(&initc, &findc, &backwards, TRUE);
+	if (findc == NUL)
 	    return NULL;
     }
     /*
@@ -1895,36 +1876,14 @@ findmatchlimit(oap, initc, flags, maxtravel)
 		    --pos.col;
 		for (;;)
 		{
-		    initc = linep[pos.col];
+		    initc = PTR2CHAR(linep + pos.col);
 		    if (initc == NUL)
 			break;
 
-		    for (ptr = curbuf->b_p_mps; *ptr; ++ptr)
-		    {
-			if (*ptr == initc)
-			{
-			    findc = ptr[2];
-			    backwards = FALSE;
-			    break;
-			}
-			ptr += 2;
-			if (*ptr == initc)
-			{
-			    findc = ptr[-2];
-			    backwards = TRUE;
-			    break;
-			}
-			if (!*++ptr)
-			    break;
-		    }
+		    find_mps_values(&initc, &findc, &backwards, FALSE);
 		    if (findc)
 			break;
-#ifdef FEAT_MBYTE
-		    if (has_mbyte)
-			pos.col += (*mb_ptr2len)(linep + pos.col);
-		    else
-#endif
-			++pos.col;
+		    pos.col += MB_PTR2LEN(linep + pos.col);
 		}
 		if (!findc)
 		{
@@ -2269,7 +2228,8 @@ findmatchlimit(oap, initc, flags, maxtravel)
 	 *   inquote if the number of quotes in a line is even, unless this
 	 *   line or the previous one ends in a '\'.  Complicated, isn't it?
 	 */
-	switch (c = linep[pos.col])
+	c = PTR2CHAR(linep + pos.col);
+	switch (c)
 	{
 	case NUL:
 	    /* at end of line without trailing backslash, reset inquote */
@@ -2478,20 +2438,23 @@ showmatch(c)
      * Only show match for chars in the 'matchpairs' option.
      */
     /* 'matchpairs' is "x:y,x:y" */
-    for (p = curbuf->b_p_mps; *p != NUL; p += 2)
+    for (p = curbuf->b_p_mps; *p != NUL; ++p)
     {
+	if (PTR2CHAR(p) == c
 #ifdef FEAT_RIGHTLEFT
-	if (*p == c && (curwin->w_p_rl ^ p_ri))
-	    break;
+		    && (curwin->w_p_rl ^ p_ri)
 #endif
-	p += 2;
-	if (*p == c
+	   )
+	    break;
+	p += MB_PTR2LEN(p) + 1;
+	if (PTR2CHAR(p) == c
 #ifdef FEAT_RIGHTLEFT
 		&& !(curwin->w_p_rl ^ p_ri)
 #endif
 	   )
 	    break;
-	if (p[1] != ',')
+	p += MB_PTR2LEN(p);
+	if (*p == NUL)
 	    return;
     }
 
@@ -4554,7 +4517,6 @@ current_search(count, forward)
     int		dir;
     int		result;		/* result of various function calls */
     char_u	old_p_ws = p_ws;
-    int		visual_active = FALSE;
     int		flags = 0;
     pos_T	save_VIsual;
     int		zerowidth = FALSE;
@@ -4570,11 +4532,6 @@ current_search(count, forward)
     {
 	orig_pos = curwin->w_cursor;
 	save_VIsual = VIsual;
-	visual_active = TRUE;
-
-	/* just started visual selection, only one character */
-	if (equalpos(VIsual, curwin->w_cursor))
-	    visual_active = FALSE;
 
 	pos = curwin->w_cursor;
 	start_pos = VIsual;
@@ -4628,7 +4585,7 @@ current_search(count, forward)
 	    p_ws = old_p_ws;
 	    return FAIL;
 	}
-	else if (!i && !result && !visual_active)
+	else if (!i && !result)
 	{
 	    if (forward) /* try again from start of buffer */
 	    {
@@ -4665,8 +4622,15 @@ current_search(count, forward)
     if (VIsual_active)
     {
 	redraw_curbuf_later(INVERTED);	/* update the inversion */
-	if (*p_sel == 'e' && ltoreq(VIsual, curwin->w_cursor))
-	    inc_cursor();
+	if (*p_sel == 'e')
+	{
+	    /* Correction for exclusive selection depends on the direction. */
+	    if (forward && ltoreq(VIsual, curwin->w_cursor))
+		inc_cursor();
+	    else if (!forward && ltoreq(curwin->w_cursor, VIsual))
+		inc(&VIsual);
+	}
+
     }
 
 #ifdef FEAT_FOLDING
@@ -4700,7 +4664,8 @@ is_zerowidth(pattern)
     regmmatch_T	regmatch;
     int		nmatched = 0;
     int		result = -1;
-    pos_T       pos;
+    pos_T	pos;
+    int		save_called_emsg = called_emsg;
 
     if (search_regcomp(pattern, RE_SEARCH, RE_SEARCH,
 					      SEARCH_KEEP, &regmatch) == FAIL)
@@ -4713,15 +4678,17 @@ is_zerowidth(pattern)
     {
 	/* Zero-width pattern should match somewhere, then we can check if
 	 * start and end are in the same position. */
+	called_emsg = FALSE;
 	nmatched = vim_regexec_multi(&regmatch, curwin, curbuf,
 						  pos.lnum, (colnr_T)0, NULL);
 
 	if (!called_emsg)
 	    result = (nmatched != 0
-		    && regmatch.startpos[0].lnum == regmatch.endpos[0].lnum
-		    && regmatch.startpos[0].col == regmatch.endpos[0].col);
+		&& regmatch.startpos[0].lnum == regmatch.endpos[0].lnum
+		&& regmatch.startpos[0].col == regmatch.endpos[0].col);
     }
 
+    called_emsg |= save_called_emsg;
     vim_free(regmatch.regprog);
     return result;
 }

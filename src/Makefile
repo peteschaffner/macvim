@@ -1361,6 +1361,8 @@ LINT_EXTRA = -DUSE_SNIFF -DHANGUL_INPUT -D"__attribute__(x)="
 
 DEPEND_CFLAGS = -DPROTO -DDEPEND -DFEAT_GUI $(LINT_CFLAGS)
 
+# Note: MZSCHEME_LIBS must come before LIBS, because LIBS adds -lm which is
+# needed by racket.
 ALL_LIB_DIRS = $(GUI_LIBS_DIR) $(X_LIBS_DIR)
 ALL_LIBS = \
 	   $(GUI_LIBS1) \
@@ -1369,10 +1371,10 @@ ALL_LIBS = \
 	   $(X_PRE_LIBS) \
 	   $(X_LIBS) \
 	   $(X_EXTRA_LIBS) \
+	   $(MZSCHEME_LIBS) \
 	   $(LIBS) \
 	   $(EXTRA_LIBS) \
 	   $(LUA_LIBS) \
-	   $(MZSCHEME_LIBS) \
 	   $(PERL_LIBS) \
 	   $(PYTHON_LIBS) \
 	   $(PYTHON3_LIBS) \
@@ -1769,10 +1771,11 @@ proto: $(PRO_AUTO) $(PRO_MANUAL)
 # Filter out arguments that cproto doesn't support.
 # Don't pass "-pthread" to cproto, it sees it as a list of individual flags.
 # Don't pass "-fstack-protector" to cproto, for the same reason.
+# Don't pass "-g" to cproto.
 # The -E"gcc -E" argument must be separate to avoid problems with shell
 # quoting.
 CPROTO = cproto $(PROTO_FLAGS) -DPROTO \
-	 `echo '$(LINT_CFLAGS)' | sed -e 's/-pthread//g' -e 's/-fstack-protector//g'`
+	 `echo '$(LINT_CFLAGS)' | sed -e 's/-pthread//g' -e 's/-fstack-protector//g' -e 's/\ -g\ / /g'`
 
 ### Would be nice if this would work for "normal" make.
 ### Currently it only works for (Free)BSD make.
