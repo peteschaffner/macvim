@@ -814,9 +814,9 @@ static NSString *LEFT_KEY_CHAR, *RIGHT_KEY_CHAR, *DOWN_KEY_CHAR, *UP_KEY_CHAR;
     action = multipleSelection ? NULL : @selector(revealInFinder:);
     title = [NSString stringWithFormat:@"Reveal “%@” in Finder", filename];
     [menu addItemWithTitle:title action:action keyEquivalent:@""];
-    action = multipleSelection ? NULL : @selector(openWithFinder:);
-    title = [NSString stringWithFormat:@"Open “%@” with Finder", filename];
-    [menu addItemWithTitle:title action:action keyEquivalent:@""];
+    //action = multipleSelection ? NULL : @selector(openWithFinder:);
+    //title = [NSString stringWithFormat:@"Open “%@” with Finder", filename];
+    //[menu addItemWithTitle:title action:action keyEquivalent:@""];
     // open with app submenu
     title = [NSString stringWithFormat:@"Open “%@” with…", filename];
     NSMenuItem *openWithFinderItem = [menu addItemWithTitle:title action:NULL keyEquivalent:@""];
