@@ -51,7 +51,6 @@ enum {
 - (int)type;
 - (NSRange)range;
 - (void)setRange:(NSRange)newRange;
-- (void)drawRect:(NSRect)dirtyRect;
 @end
 
 
@@ -802,15 +801,6 @@ enum {
     [connection addRequestMode:NSEventTrackingRunLoopMode];
     [super mouseDown:event];
     [connection removeRequestMode:NSEventTrackingRunLoopMode];
-}
-
-// This only looks nice if you use Solarized dark
-- (void)drawRect:(NSRect)dirtyRect
-{
-    [[NSColor colorWithDeviceRed:0.000 green:0.169 blue:0.216 alpha:1.000] set];
-    NSRectFill(dirtyRect);
-
-    [self drawKnob];
 }
 
 @end // MMScroller
